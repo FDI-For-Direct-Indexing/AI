@@ -3,12 +3,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 from typing import List
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 모든 도메인 허용. 필요에 따라 특정 도메인을 명시할 수 있습니다.
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,11 +35,11 @@ class CompletionRequest(BaseModel):
     seed: int
 
 class CompletionExecutor:
-    def __init__(self, host, api_key, api_key_primary_val, request_id):
-        self._host = host
-        self._api_key = api_key
-        self._api_key_primary_val = api_key_primary_val
-        self._request_id = request_id
+    def __init__(self):
+        self._host = os.getenv('HOST')
+        self._api_key = os.getenv('API_KEY')
+        self._api_key_primary_val = os.getenv('API_KEY_PRIMARY_VAL')
+        self._request_id = os.getenv('REQUEST_ID')
 
     def execute(self, completion_request):
         headers = {
@@ -54,14 +59,10 @@ class CompletionExecutor:
 
         return response_lines
 
-executor = CompletionExecutor(
-    host='https://clovastudio.stream.ntruss.com',
-    api_key='NTA0MjU2MWZlZTcxNDJiY30jk7lQP3xmyTRusMTthaYhI3ck8eby7gMtD+7avw7f',
-    api_key_primary_val='o4VPDSSP0K25kLp9gyfLMasuKzxLcFsLSPUnfbF5',
-    request_id='01cf4b60-dc37-4695-86f1-0718c4661770'
-)
+executor = CompletionExecutor()
 
-@app.post("/execute_completion")
+@app.post("/execute_completion") 
+#post url
 def execute_completion(request: CompletionRequest):
     try:
         response = executor.execute(request)
@@ -69,5 +70,5 @@ def execute_completion(request: CompletionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# To run the server, save this file and run: uvicorn filename:app --reload
+# run: uvicorn filename:app --reload
 
