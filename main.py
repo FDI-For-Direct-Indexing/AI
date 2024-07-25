@@ -5,6 +5,7 @@ import requests
 from typing import List
 from dotenv import load_dotenv
 import os
+import json
 
 # Load environment variables from .env file
 load_dotenv()
@@ -61,14 +62,34 @@ class CompletionExecutor:
 
 executor = CompletionExecutor()
 
-@app.post("/execute_completion") 
+@app.post("/execute-completion") 
 #post url
 def execute_completion(request: CompletionRequest):
     try:
         response = executor.execute(request)
-        return {"status": "success", "data": response}
+        
+        # event:result부분만 추출 - 데이터 파싱
+        for line in response:
+            if line.startswith('event:result'):
+                next_line_index = response.index(line) + 1
+                data_line = response[next_line_index]
+                break
+        else:
+            raise HTTPException(status_code=500, detail="No valid data line found")
+
+        # Extract the JSON part from the data line
+        data_json_str = data_line.split("data:", 1)[1]
+        data_json = json.loads(data_json_str)
+
+        #'content'부분만 추출
+        content = data_json.get("message", {}).get("content", "")
+
+        return {"content": content}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
 
 # run: uvicorn filename:app --reload
 
