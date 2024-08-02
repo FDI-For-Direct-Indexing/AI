@@ -99,10 +99,9 @@ def execute_completion(request: CompletionRequest):
 
 @app.post("/ai/save-final-response")
 def save_final_response(request: SaveResponseRequest):
-    global latest_response, current_id
+    global latest_response
     latest_response = request.response
-    current_id += 1
-    return {"status": "success", "id": current_id}
+    return {"status": "success"}
 
 @app.get("/ai/get-final-response")
 def get_final_response():
@@ -117,7 +116,6 @@ def get_final_response():
         parsed_response = "가중치 지수 정보를 찾을 수 없습니다."
 
     return {parsed_response}
-
 
 
 
